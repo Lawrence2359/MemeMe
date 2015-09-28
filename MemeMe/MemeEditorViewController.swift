@@ -9,19 +9,7 @@
 import UIKit
 import Foundation
 
-struct Meme {
-    var text: String
-    var image: UIImage
-    var memedImage: UIImage
-    
-    init(text: String, image: UIImage, memedImage: UIImage){
-        self.text = text
-        self.image = image
-        self.memedImage = memedImage
-    }
-}
-
-class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
+class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
 
     @IBOutlet weak var btnShare: UIBarButtonItem!
     @IBOutlet weak var toolBar: UIToolbar!
@@ -44,7 +32,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.setupView()
+        setupView()
     }
     
 
@@ -54,31 +42,29 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     override func viewWillAppear(animated: Bool) {
-        self.btnCamera.enabled = UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera)
-        self.subscribeToKeyboardNotifications()
-        self.subscribeToKeyboardWillHideNotifications()
+        btnCamera.enabled = UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera)
+        subscribeToKeyboardNotifications()
+        subscribeToKeyboardWillHideNotifications()
     }
     
     override func viewWillDisappear(animated: Bool) {
-        self.unsubscribeToKeyboardNotifications()
-        self.unsubscribeToKeyboardWillHideNotifications()
+        unsubscribeToKeyboardNotifications()
+        unsubscribeToKeyboardWillHideNotifications()
     }
     
     func setupView() {
-        self.txtTop.defaultTextAttributes = memeTextAttributes
-        self.txtBottom.defaultTextAttributes = memeTextAttributes
-        self.txtTop.textAlignment = .Center
-        self.txtBottom.textAlignment = .Center
-        self.txtTop.tag = 1
-        self.txtBottom.tag = 2
-        self.btnShare.enabled = false
+        txtTop.defaultTextAttributes = memeTextAttributes
+        txtBottom.defaultTextAttributes = memeTextAttributes
+        txtTop.textAlignment = .Center
+        txtBottom.textAlignment = .Center
+        txtTop.tag = 1
+        txtBottom.tag = 2
+        btnShare.enabled = false
+        txtTop.placeholder = "Input top text here"
+        txtBottom.placeholder = "Input bottom text here"
     }
     
 // MARK: - Actions
-    
-    func tappedView() {
-        //self.activeTxtField.resignFirstResponder()
-    }
     
     @IBAction func onAlbum(sender: AnyObject) {
         let imagePicker = UIImagePickerController()
@@ -94,26 +80,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         [self .presentViewController(imagePicker, animated: true, completion: nil)]
     }
     
-    @IBAction func onSave(sender: AnyObject) {
-        //Create the meme
-        let combinedText = self.txtTop.text! + self.txtBottom.text!
-        let meme = Meme( text: combinedText, image:
-            self.imageView.image!, memedImage: self.generateMemedImage())
-        //var messageStr:String  = "Check out my awesome iPicSafe photo!"
-        //var shareItems:Array = [img, messageStr]
-        let shareItems:Array = [meme.memedImage]
-        let activityViewController:UIActivityViewController = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)
-        activityViewController.excludedActivityTypes = [UIActivityTypePrint, UIActivityTypePostToWeibo, UIActivityTypeCopyToPasteboard, UIActivityTypeAddToReadingList, UIActivityTypePostToVimeo]
-        self.presentViewController(activityViewController, animated: true, completion: nil)
+    @IBAction func onShare(sender: AnyObject) {
+        share(save())
     }
     
 // MARK: - ImagePickerController Delegate
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
-        self.imageView.image = image
-        self.imageView.clipsToBounds = true
-        self.imageView.contentMode = UIViewContentMode.ScaleAspectFill;
-        self.btnShare.enabled = true
+        imageView.image = image
+        imageView.clipsToBounds = true
+        imageView.contentMode = UIViewContentMode.ScaleAspectFill;
+        btnShare.enabled = true
         picker.dismissViewControllerAnimated(true, completion: nil)
     }
     
@@ -124,7 +101,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
 // MARK: - TextField Delegate
     
     func textFieldDidBeginEditing(textField: UITextField) {
-        self.activeTxtField = textField
+        activeTxtField = textField
     }
     
     func textFieldShouldReturn(textField: UITextField) -> Bool {
@@ -173,7 +150,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     func generateMemedImage() -> UIImage
     {
         self.navigationController?.navigationBarHidden = true
-        self.toolBar.hidden = true
+        toolBar.hidden = true
         
         // Render view to an image
         UIGraphicsBeginImageContext(self.view.frame.size)
@@ -184,9 +161,32 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         UIGraphicsEndImageContext()
         
         self.navigationController?.navigationBarHidden = false
-        self.toolBar.hidden = false
+        toolBar.hidden = false
         
         return memedImage
+    }
+    
+    func save() -> Meme{
+        let meme = Meme(topText:txtTop.text!, bottomText:txtBottom.text!, originalImage:imageView.image!, memedImage:generateMemedImage())
+        return meme
+    }
+    
+    func share(meme: Meme) {
+        let shareItems:Array = [meme.memedImage]
+        let activityViewController:UIActivityViewController! = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)
+        activityViewController.excludedActivityTypes = [UIActivityTypePrint, UIActivityTypePostToWeibo, UIActivityTypeCopyToPasteboard, UIActivityTypeAddToReadingList, UIActivityTypePostToVimeo]
+        self.presentViewController(activityViewController, animated: true) { () -> Void in
+            let controller = UIAlertController()
+            controller.title = "Test alert"
+            controller.message = "This is a test"
+            
+            // Dismiss the view controller after the user taps “ok”
+            let okAction = UIAlertAction (title:"ok", style: UIAlertActionStyle.Default) {
+                action in self.dismissViewControllerAnimated(true, completion: nil)
+            }
+            controller.addAction(okAction)
+            self.presentViewController(controller, animated: true, completion:nil)
+        }
     }
 
 }

@@ -5,10 +5,10 @@
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Meme Editor View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="MemeMe" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="MemeEditorViewController" customModule="MemeMe" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
@@ -78,9 +78,9 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="476-DX-jRm">
-                        <barButtonItem key="rightBarButtonItem" title="Share" id="7dc-j7-lZI">
+                        <barButtonItem key="rightBarButtonItem" systemItem="action" id="7dc-j7-lZI">
                             <connections>
-                                <action selector="onSave:" destination="BYZ-38-t0r" id="b3f-lH-xGA"/>
+                                <action selector="onShare:" destination="BYZ-38-t0r" id="19F-d2-dSF"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
