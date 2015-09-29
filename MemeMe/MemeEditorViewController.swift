@@ -19,6 +19,10 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
     @IBOutlet weak var txtTop: UITextField!
     @IBOutlet weak var txtBottom: UITextField!
     
+    var selectedMeme: Meme!
+    
+    var isShowMeme: Bool!
+    
     var activeTxtField: UITextField!
     
     let memeTextAttributes = [        
@@ -59,9 +63,24 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
         txtBottom.textAlignment = .Center
         txtTop.tag = 1
         txtBottom.tag = 2
-        btnShare.enabled = false
-        txtTop.placeholder = "Input top text here"
-        txtBottom.placeholder = "Input bottom text here"
+        
+        if(isShowMeme==false){
+            btnShare.enabled = false
+            txtTop.placeholder = "Input top text here"
+            txtBottom.placeholder = "Input bottom text here"
+        }else{
+            btnShare.enabled = true
+            txtTop.enabled = false
+            txtBottom.enabled = false
+            txtTop.text = selectedMeme.topText
+            txtBottom.text = selectedMeme.bottomText
+            btnCamera.enabled = false
+            btnCamera.enabled = false
+            imageView.image = selectedMeme.originalImage
+            self.tabBarController?.tabBar.hidden = true
+            toolBar.hidden = true
+        }
+        
     }
     
 // MARK: - Actions
@@ -81,7 +100,7 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
     }
     
     @IBAction func onShare(sender: AnyObject) {
-        share(save())
+        share(generateMemedImage())
     }
     
 // MARK: - ImagePickerController Delegate
@@ -166,28 +185,50 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
         return memedImage
     }
     
-    func save() -> Meme{
-        let meme = Meme(topText:txtTop.text!, bottomText:txtBottom.text!, originalImage:imageView.image!, memedImage:generateMemedImage())
-        return meme
-    }
-    
-    func share(meme: Meme) {
-        let shareItems:Array = [meme.memedImage]
-        let activityViewController:UIActivityViewController! = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)
-        activityViewController.excludedActivityTypes = [UIActivityTypePrint, UIActivityTypePostToWeibo, UIActivityTypeCopyToPasteboard, UIActivityTypeAddToReadingList, UIActivityTypePostToVimeo]
-        self.presentViewController(activityViewController, animated: true) { () -> Void in
-            let controller = UIAlertController()
-            controller.title = "Test alert"
-            controller.message = "This is a test"
-            
-            // Dismiss the view controller after the user taps “ok”
-            let okAction = UIAlertAction (title:"ok", style: UIAlertActionStyle.Default) {
-                action in self.dismissViewControllerAnimated(true, completion: nil)
-            }
-            controller.addAction(okAction)
-            self.presentViewController(controller, animated: true, completion:nil)
+    func save(){
+        if(validateFields()){
+            let meme = Meme(topText:txtTop.text!, bottomText:txtBottom.text!, originalImage:imageView.image!, memedImage:generateMemedImage())
+            // Add it to the memes array in the Application Delegate
+            let object = UIApplication.sharedApplication().delegate
+            let appDelegate = object as! AppDelegate
+            appDelegate.memes.append(meme)
+        }else{
+            showAlertWithMessage("Missing Fields", message: "Please input message and text")
         }
     }
+    
+    func validateFields() -> Bool {
+        if ((txtTop.text != "") || (txtBottom.text != "")){
+            if imageView.image != nil {
+                return true
+            }
+        }
+        return false
+    }
+    
+    func showAlertWithMessage(title: String, message: String){
+        let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
+        alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.Default, handler: nil))
+        self.presentViewController(alert, animated: true, completion: nil)
+    }
+    
+    func share(memedImage: UIImage) {
+        let shareItems:Array = [memedImage]
+        let activityViewController:UIActivityViewController! = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)
+        activityViewController.excludedActivityTypes = [UIActivityTypePrint, UIActivityTypePostToWeibo, UIActivityTypeCopyToPasteboard, UIActivityTypeAddToReadingList, UIActivityTypePostToVimeo]
+        self.presentViewController(activityViewController, animated: true, completion: nil)
+    }
+    
+    @IBAction func onClose(sender: AnyObject) {
+        if(isShowMeme == false){
+            save()
+            self.dismissViewControllerAnimated(true, completion: nil)
+        }else{
+            self.navigationController?.popViewControllerAnimated(true)
+        }
+        
+    }
+        
 
 }
 
